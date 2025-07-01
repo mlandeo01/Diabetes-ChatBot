@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Bread AI - Content Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .reset-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .options-container {
+            margin-top: 12px;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .option-btn:hover {
+            background: #e5e7eb;
+            border-color: #4f46e5;
+            transform: translateX(5px);
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 0;
+            color: #6b7280;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .typing-indicator.show {
+            display: block;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .welcome-message h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .welcome-message p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        /* Scrollbar styling */
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Daily Bread AI</h1>
+            <p>Your Professional Content Creation Assistant</p>
+            <button class="reset-btn" onclick="resetConversation()">New Chat</button>
+        </div>
+
+        <div class="messages-container" id="messages">
+            <div class="welcome-message">
+                <h3>🚀 Welcome to Daily Bread AI!</h3>
+                <p>I'm here to help you create compelling content that converts. Let's build something amazing together!</p>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typing">
+            Daily Bread AI is typing...
+        </div>
+
+        <div class="input-container">
+            <form class="input-form" id="chatForm">
+                <input 
+                    type="text" 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Type your message here..."
+                    required
+                >
+                <button type="submit" class="send-btn" id="sendBtn">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let threadId = null;
+        let conversationState = null;
+
+        // Initialize chat
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-start conversation
+            sendMessage('start', true);
+        });
+
+        // Form submission
+        document.getElementById('chatForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                sendMessage(message);
+                messageInput.value = '';
+            }
+        });
+
+        // Send message function
+        async function sendMessage(message, isAutoStart = false) {
+            const messagesContainer = document.getElementById('messages');
+            const sendBtn = document.getElementById('sendBtn');
+            const typingIndicator = document.getElementById('typing');
+
+            // Add user message to UI (unless it's auto-start)
+            if (!isAutoStart) {
+                addMessageToUI(message, 'user');
+            }
+
+            // Show typing indicator and disable send button
+            typingIndicator.classList.add('show');
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        thread_id: threadId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Update thread ID and conversation state
+                threadId = data.thread_id;
+                conversationState = data.conversation_state;
+
+                // Add assistant response to UI
+                addMessageToUI(data.response, 'assistant');
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessageToUI('Sorry, I encountered an error. Please try again.', 'assistant');
+            } finally {
+                // Hide typing indicator and enable send button
+                typingIndicator.classList.remove('show');
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Add message to UI
+        function addMessageToUI(message, sender) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const messageContent = parseMessageContent(message, sender);
+            messageDiv.innerHTML = `<div class="message-bubble">${messageContent}</div>`;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Parse message content and handle options
+        function parseMessageContent(message, sender) {
+            if (sender === 'assistant') {
+                // Check if message contains options (bullet points)
+                const lines = message.split('\n');
+                const mainMessage = [];
+                const options = [];
+                let inOptions = false;
+
+                lines.forEach(line => {
+                    if (line.trim().startsWith('•')) {
+                        inOptions = true;
+                        options.push(line.trim().substring(1).trim());
+                    } else if (line.trim() && !inOptions) {
+                        mainMessage.push(line);
+                    }
+                });
+
+                let content = mainMessage.join('\n');
+                
+                if (options.length > 0) {
+                    content += '<div class="options-container">';
+                    options.forEach(option => {
+                        content += `<button class="option-btn" onclick="selectOption('${option.replace(/'/g, "\\'")}')">${option}</button>`;
+                    });
+                    content += '</div>';
+                }
+
+                return content;
+            }
+            
+            return message;
+        }
+
+        // Handle option selection
+        function selectOption(option) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = option;
+            sendMessage(option);
+        }
+
+        // Reset conversation
+        async function resetConversation() {
+            if (confirm('Are you sure you want to start a new conversation?')) {
+                try {
+                    await fetch('/reset_conversation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            thread_id: threadId
+                        })
+                    });
+
+                    // Clear UI and reset variables
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = `
+                        <div class="welcome-message">
+                            <h3>🚀 Welcome to Daily Bread AI!</h3>
+                            <p>I'm here to help you create compelling content that converts. Let's build something amazing together!</p>
+                        </div>
+                    `;
+                    
+                    threadId = null;
+                    conversationState = null;
+
+                    // Restart conversation
+                    setTimeout(() => {
+                        sendMessage('start', true);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Error resetting conversation:', error);
+                }
+            }
+        }
+
+        // Enter key support
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
